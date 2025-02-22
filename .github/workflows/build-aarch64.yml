@@ -121,9 +121,9 @@ jobs:
           directory: output/full-arm64
           setup-options: -Ddocumentation=disabled -Dtest=true -Dsystemd=enabled -Dpcre=enabled -Darch=aarch64
           meson-version: 0.56.0
-          env:
-            CC: 'ccache aarch64-linux-gnu-gcc'
-            CXX: 'ccache aarch64-linux-gnu-g++'
+        env:
+          CC: 'ccache aarch64-linux-gnu-gcc'
+          CXX: 'ccache aarch64-linux-gnu-g++'
 
       - name: Mini Build (ARM64)
         uses: BSFishy/meson-build@v1.0.3
@@ -132,9 +132,9 @@ jobs:
           directory: output/mini-arm64
           setup-options: -Dbuildtype=minsize -Dauto_features=disabled -Dtest=true -Ddaemon=false -Dinotify=false -Depoll=false -Deventfd=false -Dsignalfd=false -Dtcp=false -Ddsd=false -Ddatabase=false -Dneighbor=false -Dcue=false -Dfifo=false -Dhttpd=false -Dpipe=false -Drecorder=false -Dsnapcast=false -Darch=aarch64
           meson-version: 0.56.0
-          env:
-            CC: 'ccache aarch64-linux-gnu-gcc'
-            CXX: 'ccache aarch64-linux-gnu-g++'
+        env:
+          CC: 'ccache aarch64-linux-gnu-gcc'
+          CXX: 'ccache aarch64-linux-gnu-g++'
 
       - name: Archive binaries
         uses: actions/upload-artifact@v3
