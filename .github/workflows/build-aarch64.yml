@@ -1,0 +1,143 @@
+name: Build ARM64
+
+on:
+  workflow_dispatch:
+  push:
+    paths-ignore:
+      - 'android/**'
+      - 'build/**'
+      - 'doc/**'
+      - 'python/**'
+      - 'subprojects/**'
+      - 'systemd/**'
+      - 'win32/**'
+    branches:
+      - master
+      - v0.23.x
+  pull_request:
+    paths-ignore:
+      - 'android/**'
+      - 'build/**'
+      - 'doc/**'
+      - 'python/**'
+      - 'subprojects/**'
+      - 'systemd/**'
+      - 'win32/**'
+    branches:
+      - master
+      - v0.23.x
+
+jobs:
+  build-arm64:
+    runs-on: ubuntu-22.04
+
+    container:
+      image: multiarch/qemu-user-static:register # 注册 QEMU 多架构支持
+      options: --privileged
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Register QEMU for multi-arch support
+        run: |
+          docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+
+      - name: Install dependencies
+        run: |
+          dpkg --add-architecture arm64
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            crossbuild-essential-arm64 \
+            gcc-aarch64-linux-gnu \
+            g++-aarch64-linux-gnu \
+            libfmt-dev:arm64 \
+            libboost-dev:arm64 \
+            libgtest-dev:arm64 \
+            libpcre2-dev:arm64 \
+            libsystemd-dev:arm64 \
+            libdbus-1-dev:arm64 \
+            libicu-dev:arm64 \
+            libcurl4-gnutls-dev:arm64 \
+            libavahi-client-dev:arm64 \
+            libmad0-dev:arm64 \
+            libmpg123-dev:arm64 \
+            libid3tag0-dev:arm64 \
+            libflac-dev:arm64 \
+            libvorbis-dev:arm64 \
+            libopus-dev:arm64 \
+            libogg-dev:arm64 \
+            libadplug-dev:arm64 \
+            libaudiofile-dev:arm64 \
+            libsndfile1-dev:arm64 \
+            libfaad-dev:arm64 \
+            libfluidsynth-dev:arm64 \
+            libgme-dev:arm64 \
+            libmikmod-dev:arm64 \
+            libmodplug-dev:arm64 \
+            libmpcdec-dev:arm64 \
+            libwavpack-dev:arm64 \
+            libwildmidi-dev:arm64 \
+            libsidplay2-dev:arm64 \
+            libsidutils-dev:arm64 \
+            libresid-builder-dev:arm64 \
+            libavcodec-dev:arm64 \
+            libavformat-dev:arm64 \
+            libmp3lame-dev:arm64 \
+            libtwolame-dev:arm64 \
+            libshine-dev:arm64 \
+            libsamplerate0-dev:arm64 \
+            libsoxr-dev:arm64 \
+            libbz2-dev:arm64 \
+            libcdio-paranoia-dev:arm64 \
+            libiso9660-dev:arm64 \
+            libmms-dev:arm64 \
+            libzzip-dev:arm64 \
+            libyajl-dev:arm64 \
+            libexpat-dev:arm64 \
+            libasound2-dev:arm64 \
+            libao-dev:arm64 \
+            libjack-jackd2-dev:arm64 \
+            libopenal-dev:arm64 \
+            libpulse-dev:arm64 \
+            libshout3-dev:arm64 \
+            libsndio-dev:arm64 \
+            libmpdclient-dev:arm64 \
+            libnfs-dev:arm64 \
+            libupnp-dev:arm64 \
+            libsqlite3-dev:arm64 \
+            libchromaprint-dev:arm64 \
+            libgcrypt20-dev:arm64
+
+      - id: cache-ccache
+        uses: hendrikmuhs/ccache-action@v1
+        with:
+          key: linux-arm64
+
+      - name: Full Build (ARM64)
+        uses: BSFishy/meson-build@v1.0.3
+        with:
+          action: test
+          directory: output/full-arm64
+          setup-options: -Ddocumentation=disabled -Dtest=true -Dsystemd=enabled -Dpcre=enabled -Darch=aarch64
+          meson-version: 0.56.0
+          env:
+            CC: 'ccache aarch64-linux-gnu-gcc'
+            CXX: 'ccache aarch64-linux-gnu-g++'
+
+      - name: Mini Build (ARM64)
+        uses: BSFishy/meson-build@v1.0.3
+        with:
+          action: test
+          directory: output/mini-arm64
+          setup-options: -Dbuildtype=minsize -Dauto_features=disabled -Dtest=true -Ddaemon=false -Dinotify=false -Depoll=false -Deventfd=false -Dsignalfd=false -Dtcp=false -Ddsd=false -Ddatabase=false -Dneighbor=false -Dcue=false -Dfifo=false -Dhttpd=false -Dpipe=false -Drecorder=false -Dsnapcast=false -Darch=aarch64
+          meson-version: 0.56.0
+          env:
+            CC: 'ccache aarch64-linux-gnu-gcc'
+            CXX: 'ccache aarch64-linux-gnu-g++'
+
+      - name: Archive binaries
+        uses: actions/upload-artifact@v3
+        with:
+          name: arm64-binaries
+          path: output/
